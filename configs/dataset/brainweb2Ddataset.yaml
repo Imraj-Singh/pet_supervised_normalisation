@@ -1,0 +1,7 @@
+name: brainweb2D
+base_path: E:/projects/pet_score_model/src/brainweb_2d/
+part: "subset_test"
+poisson_scale: 50
+img_xy_dim: 128
+img_z_dim: 1
+num_samples: 45
