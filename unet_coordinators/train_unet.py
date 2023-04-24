@@ -25,7 +25,7 @@ def training(config : DictConfig) -> None:
                            use_norm=config.benchmark.use_norm)
     
     model.to(config.device)
-    # train once on a combined dataset of 5, 50, 500 counts 
+    # train once on a combined dataset of 5, 10, 50 counts 
     print("Number of Parameters: ", sum([p.numel() for p in model.parameters()]))
 
     ###### SET LOGGING ######
@@ -38,7 +38,7 @@ def training(config : DictConfig) -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=config.benchmark.lr)
 
     dataset_list = []
-    for noise_level in config.benchmark.train_on_noise_level:
+    for noise_level in [5,10,50]:
         dataset = BrainWebSupervisedTrain(noise_level=noise_level, base_path = config.dataset.base_path)
         dataset_list.append(dataset)
 

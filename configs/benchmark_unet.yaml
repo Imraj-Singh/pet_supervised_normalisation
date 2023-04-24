@@ -1,8 +1,8 @@
 hydra: 
   run:
-    dir: UNET/${benchmark.train_on_noise_level}/${benchmark.normalisation}/${hydra.job.override_dirname}
+    dir: UNET/${benchmark.normalisation}/${hydra.job.override_dirname}
   sweep:
-    dir: UNET/${benchmark.train_on_noise_level}/${benchmark.normalisation}
+    dir: UNET/${benchmark.normalisation}
     subdir: ${hydra.job.override_dirname}
   job:
     config:

@@ -1,8 +1,8 @@
 hydra: 
   run:
-    dir: LPD/${benchmark.train_on_noise_level}/${benchmark.normalisation}/${hydra.job.override_dirname}
+    dir: LPD/${benchmark.normalisation}/${hydra.job.override_dirname}
   sweep:
-    dir: LPD/${benchmark.train_on_noise_level}/${benchmark.normalisation}
+    dir: LPD/${benchmark.normalisation}
     subdir: ${hydra.job.override_dirname}
   job:
     config:

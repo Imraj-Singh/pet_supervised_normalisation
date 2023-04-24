@@ -51,7 +51,7 @@ def training(config : DictConfig) -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=config.benchmark.lr)
 
     dataset_list = []
-    for noise_level in config.benchmark.train_on_noise_level:
+    for noise_level in [5,10,50]:
         dataset = BrainWebSupervisedTrain(noise_level = noise_level, base_path = config.dataset.base_path)
         dataset_list.append(dataset)
 
@@ -173,7 +173,7 @@ def training(config : DictConfig) -> None:
             min_loss = val_loss
             torch.save(model.state_dict(), os.path.join(log_dir, "model_min_val_loss.pt"))
             model.train()
-        writer.add_scalar("validation/accum_loss", val_loss, global_step=epoch + 1)
+        writer.add_scalar("validation/loss_average", val_loss, global_step=epoch + 1)
         torch.save(model.state_dict(), os.path.join(log_dir, "last_model.pt"))
 
 

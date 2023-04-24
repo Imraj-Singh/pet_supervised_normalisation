@@ -1,6 +1,5 @@
 n_iter: 3
 lr: 1e-3
-train_on_noise_level: [5,10,50]
 batch_size: 16
 epochs: 1000
 log_freq: 1000

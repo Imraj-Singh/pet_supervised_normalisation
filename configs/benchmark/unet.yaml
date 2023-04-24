@@ -10,6 +10,4 @@ lr: 3e-4
 batch_size: 16
 epochs: 1000
 log_freq: 1000
-train_on_noise_level: [5]
-normalisation: "none" # "none" "data_mean" "data_quantile" "data_max" "osem_mean" "osem_quantile" "osem_max"
-# --multirun benchmark.normalisation="none","data_mean","data_quantile","data_max","osem_mean","osem_quantile","osem_max" benchmark.train_on_noise_level=[5],[10],[50],[5,10,50]
+normalisation: "none"
