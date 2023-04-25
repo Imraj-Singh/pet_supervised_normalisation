@@ -33,7 +33,7 @@ if __name__ == "__main__":
     xp.random.seed(42)
     n_realisations = 10
     bool_tumour = [True, False]
-    trues_per_volumes = [2.5, 5, 7.5, 10, 50, 100]
+    trues_per_volumes = [100, 50, 10, 7.5, 5, 2.5]
     for tumour in bool_tumour:
 
         if tumour:
@@ -47,18 +47,18 @@ if __name__ == "__main__":
             noisy_data_pts = []
             contamination_pts = []
             attenuation_pts = []
-            print(f"Trues per volume {trues_per_volume}")
+            print(f"Trues per volume {trues_per_volume}, tumour {tumour}")
             for idx in tqdm(range(len(dataset))):
                 osem_tmps = []
                 scaling_factor_tmps = [] 
                 noisy_data_tmps = []
                 contamination_tmps = []
                 attenuation_tmps = []
+                y, mu, gt = dataset[idx]
+                gt = xp.from_dlpack(gt.squeeze().unsqueeze(-1).to("cuda"))
+                mu = xp.from_dlpack(mu.squeeze().unsqueeze(-1).to("cuda"))
+                y = xp.from_dlpack(y.squeeze().to("cuda"))
                 for _ in range(n_realisations):
-                    y, mu, gt = dataset[idx]
-                    gt = xp.from_dlpack(gt.squeeze().unsqueeze(-1))
-                    mu = xp.from_dlpack(mu.squeeze().unsqueeze(-1))
-                    y = xp.from_dlpack(y.squeeze())
                     # simulate the attenuation factors (exp(-fwd(attenuation_image)))
                     attenuation_factors = xp.exp(-mu_projector.forward(mu))
                     projector.multiplicative_corrections = attenuation_factors * 1. / 30
@@ -91,6 +91,14 @@ if __name__ == "__main__":
                     noisy_data_tmps.append(torch.from_dlpack(data)[None].float().cuda())
                     contamination_tmps.append(torch.tensor(contamination_scale)[None].float().cuda())
                     attenuation_tmps.append(torch.from_dlpack(attenuation_factors)[None].float().cuda())
+                
+                """ import matplotlib.pyplot as plt
+                fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+                ax[0].imshow(osem_x[:,:,0].get())
+                ax[1].imshow(mu[:,:,0].get())
+                ax[2].imshow(gt[:,:,0].get())
+                plt.show()
+                exit() """
             
                 osem_pts.append(torch.cat(osem_tmps)[None])
                 scaling_factor_pts.append(torch.cat(scaling_factor_tmps)[None])

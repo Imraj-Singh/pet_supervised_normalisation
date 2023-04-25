@@ -20,6 +20,7 @@ if __name__=="__main__":
                                                 (256,256,1), 
                                                 (-127.5, -127.5, 0),
                                                 (1,1,2))
+    
     true_projector = petprojectors.PETJosephProjector(coincidence_descriptor,
                                                 (256,256,1), 
                                                 (-127.5, -127.5, 0),
@@ -30,7 +31,7 @@ if __name__=="__main__":
     
     true_projector.image_based_resolution_model = res_model
     
-    bool_tumour = [False, True]
+    bool_tumour = [True, False]
 
     for tumour in bool_tumour:
 
@@ -44,7 +45,6 @@ if __name__=="__main__":
 
         nii_pet = nib.as_closest_canonical(nib.load(f'E:/projects/pyparallelproj/examples/data/brainweb_petmr/subject04/sim_0/true_pet.nii.gz'))
         nii_mu = nib.as_closest_canonical(nib.load(f'E:/projects/pyparallelproj/examples/data/brainweb_petmr/subject04/mu.nii.gz'))
-        nii_mu = nib.as_closest_canonical(nib.load(f'E:/projects/pyparallelproj/examples/data/brainweb_petmr/subject04/t1.nii.gz'))
         nii_mri = nib.as_closest_canonical(nib.load(f'E:/projects/pyparallelproj/examples/data/brainweb_petmr/subject04/t1.nii.gz'))
 
         # pet image resolution [1,1,2] mm
@@ -73,13 +73,11 @@ if __name__=="__main__":
 
         for slice_number in range(image_ref.shape[-1]):
             # ENSURE THERE ARE AT LEAST 2000 NON-ZERO PIXELS IN SLICE
-            image_gt_slice = image_gt[:, :, [slice_number]]
-            image_ref_slice = image_gt[:, :, [slice_number]]
-            if len(xp.nonzero(image_ref_slice)[0]) > 2000:
+            if len(xp.nonzero(image_ref[:, :, [slice_number]])[0]) > 2000:
                 attenuation_factors = xp.exp(-mu_projector.forward(mu_gt[:, :, [slice_number]]))
                 true_projector.multiplicative_corrections = attenuation_factors * 1./30
                 if tumour:
-                    image_gt_slice, background, tumour_rois = Generate2DTumors(xp.asnumpy(image_gt_slice[...,0]))
+                    image_gt_slice, background, tumour_rois = Generate2DTumors(xp.asnumpy(image_gt[:, :, slice_number]))
                     image_gt_slice = xp.expand_dims(xp.asarray(image_gt_slice),-1)
                     image_ref_slice = (image_gt_slice[::2, :, :] + image_gt_slice[1::2, :, :])/2
                     image_ref_slice = (image_ref_slice[:, ::2, :] + image_ref_slice[:, 1::2, :])/2
@@ -91,8 +89,13 @@ if __name__=="__main__":
                     background[background < 1.] = 0.
                     background_pts.append(torch.from_numpy(background)[None][None].float().cuda())
                     tumour_rois_pts.append(torch.from_numpy(tumour_rois)[None].float().cuda())
-                clean_data = true_projector.forward(image_gt[:, :, [slice_number]])
+                    #print("Has tumour")
+                else:
+                    image_gt_slice = image_gt[..., [slice_number]]
+                    image_ref_slice = image_ref[..., [slice_number]]
+                    #print("Has no tumour")
 
+                clean_data = true_projector.forward(image_gt_slice)
                 clean_data_pts.append(torch.from_dlpack(clean_data[None][None]).float().cuda())
                 mu_ref_pts.append(torch.from_dlpack(mu_ref[:, :, slice_number][None][None]).float().cuda())
                 image_ref_pts.append(torch.from_dlpack(image_ref_slice[:, :, 0][None][None]).float().cuda())

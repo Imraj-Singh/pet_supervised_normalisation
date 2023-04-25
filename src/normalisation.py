@@ -36,5 +36,5 @@ class Normalisation:
         return norm
     
     def osem_max(self, osem, measurements, contamination_factor):
-        norm = osem.max(dim=[1,2,3])
+        norm = osem.view(osem.shape[0], -1).max(dim=-1).values
         return norm

@@ -13,7 +13,8 @@ from src import get_unet_model, BrainWebOSEM
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 if __name__ == "__main__":
-    config = omegaconf.OmegaConf.load(r"E:\projects\pet_score_model\unet_coordinators\UNET\brainweb2D\.hydra\config.yaml")
+    model_base_path = "E:/projects/pet_supervised_normalisation/unet_coordinators/UNET/[5, 10, 50]/data_mean/"
+    config = omegaconf.OmegaConf.load(model_base_path + ".hydra/config.yaml")
     model = get_unet_model(in_ch=config.benchmark.in_ch, 
                            out_ch=config.benchmark.out_ch, 
                            scales=config.benchmark.scales, 
@@ -21,7 +22,7 @@ if __name__ == "__main__":
                            channels=config.benchmark.channels, 
                            use_sigmoid=config.benchmark.use_sigmoid,
                            use_norm=config.benchmark.use_sigmoid)
-    model.load_state_dict(torch.load(os.path.join(r"E:\projects\pet_score_model\unet_coordinators\UNET\brainweb2D\Apr14_14-15-33_Fiona\model_min_val_loss.pt")))
+    model.load_state_dict(torch.load(os.path.join(model_base_path + "Apr23_18-01-00_Fiona/model_min_val_loss.pt")))
     model.eval()
     model.to(config.device)
     
@@ -95,7 +96,7 @@ if __name__ == "__main__":
             print("\t \ STDEV mean: ", np.mean(stdev_list),", std: ", np.std(stdev_list))
     
         qm_dicts[part + "_" + str(noise_level)] = qm_dict
-    torch.save(qm_dicts, "UNET_EVAL.pt")
+    #torch.save(qm_dicts, "UNET_EVAL.pt")
 
 
 
