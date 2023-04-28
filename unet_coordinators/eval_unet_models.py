@@ -124,7 +124,7 @@ for model_type in models:
                         crc_r_t.append(torch.asarray(crc_t).mean())
             if tumour:
                 crc_s_r_t.append(torch.stack(crc_r_t).cpu())
-                std_s.append(torch.std(torch.stack(b_bar_r), dim=0).mean())
+                std_s.append((torch.std(torch.stack(b_bar_r), dim=0)/torch.stack(b_bar_r).mean(0)).mean())
             ssim_s_r.append(torch.asarray(ssim_r))
             psnr_s_r.append(torch.asarray(psnr_r))
             pnll_s_r.append(torch.asarray(pnll_r))
