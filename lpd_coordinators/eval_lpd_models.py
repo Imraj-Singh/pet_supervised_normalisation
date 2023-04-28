@@ -9,7 +9,7 @@ import omegaconf
 import sys, os
 sys.path.append(os.path.dirname(os.getcwd()))
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-from src import get_unet_model, LPDForwardFunction2D, Normalisation
+from src import get_lpd_model, LPDForwardFunction2D, LPDAdjointFunction2D, Normalisation
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from pyparallelproj import coincidences, resolution_models, petprojectors
 import cupy as xp
@@ -31,21 +31,14 @@ projector.image_based_resolution_model = res_model
 pnll = torch.nn.PoissonNLLLoss(log_input=False,reduction='sum')
 
 
-models = ["data_corrected_mean", "none", "data_mean", "osem_mean", "osem_max"]
-
-model_base_path = "E:/projects/pet_supervised_normalisation/unet_coordinators/UNET/"
+models = ["none", "data_corrected_mean", "data_mean", "osem_mean", "osem_max"]
+model_base_path = "E:/projects/pet_supervised_normalisation/lpd_coordinators/LPD/"
 dataset_path = "E:/projects/pet_score_model/src/brainweb_2d/"
 save_idxs = [10,20,30,40,50,60]
 for model_type in models:
     model_path = model_base_path + model_type + "/"
     config = omegaconf.OmegaConf.load(model_path + ".hydra/config.yaml")
-    model = get_unet_model(in_ch=config.benchmark.in_ch, 
-                            out_ch=config.benchmark.out_ch, 
-                            scales=config.benchmark.scales, 
-                            skip=config.benchmark.skip,
-                            channels=config.benchmark.channels, 
-                            use_sigmoid=config.benchmark.use_sigmoid,
-                            use_norm=config.benchmark.use_norm)
+    model = get_lpd_model(n_iter = config.benchmark.n_iter, op = LPDForwardFunction2D, op_adj = LPDAdjointFunction2D)
     model.load_state_dict(torch.load(sorted(glob(model_path+"/*/model_min_val_loss.pt"))[-1]))
     model.eval()
     model.to(config.device)
@@ -94,7 +87,7 @@ for model_type in models:
                 contamination_factor = noisy_dataset["contamination_factor"][s:s+1,r:r+1,...].to(config.device)
                 attn_factors = noisy_dataset["attn_factors"][s:s+1,r:r+1,...].to(config.device) * detector_efficiency
                 norm = get_normalisation(osem, measurements, contamination_factor)
-                x_pred = torch.clamp(model(osem, norm).detach(),0)
+                x_pred = torch.clamp(model(osem, measurements, projector, attn_factors, norm, contamination_factor).detach(),0)
 
                 psnr_r.append(peak_signal_noise_ratio(reference.squeeze().cpu().numpy(), x_pred.squeeze().cpu().numpy(), data_range=reference.cpu().numpy().max()))
                 ssim_r.append(ssim(reference.squeeze().cpu().numpy(), x_pred.squeeze().cpu().numpy(), data_range=reference.cpu().numpy().max()))
@@ -103,7 +96,6 @@ for model_type in models:
                 pnll_r.append(pnll(y_pred, measurements).item())
                 kl = (measurements*torch.log(measurements/y_pred+1e-9)+ (y_pred-measurements)).sum()
                 if kl.isnan():
-                    print(torch.log(measurements/y_pred+1e-9).sum())
                     print("KL is nan")
                     exit()
                 kldiv_r.append(kl)

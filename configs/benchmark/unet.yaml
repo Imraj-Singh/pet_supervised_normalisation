@@ -8,6 +8,6 @@ use_sigmoid: False
 use_norm: True
 lr: 3e-4
 batch_size: 16
-epochs: 1000
+epochs: 250
 log_freq: 1000
 normalisation: "none"
